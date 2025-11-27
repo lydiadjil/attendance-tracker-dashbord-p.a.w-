@@ -38,12 +38,40 @@ h1 {
 }
 
 /* --- Shared Card Style --- */
-.card {
+/* --- Force Dark Background on Cards (Fixes White Report) --- */
+.card, section.card {
+    background-color: #2c3e50 !important; /* Force Dark Blue-Grey */
+    color: #e2e8f0 !important; /* Force Light Text */
+    border: 1px solid #4a5568; /* Slight border to define edges */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     margin-bottom: 40px;
     padding: 30px;
     border-radius: 10px;
-    background-color: var(--medium-blue-grey);
-    box-shadow: 0 10px 30px var(--shadow-color);
+}
+
+/* --- Force Dark Background on Table Headers (Fixes White Table Header) --- */
+thead, th {
+    background-color: #1a202c !important; /* Force Dark Background */
+    color: #ffffff !important; /* Force White Text */
+    border-bottom: 2px solid #4a5568;
+}
+
+/* Ensure the table itself has a dark background */
+table {
+    background-color: #2c3e50 !important;
+    color: #e2e8f0;
+}
+
+/* Fix for the Summary Report Text specifically */
+#summary-text p, #summary-text strong {
+    color: #e2e8f0 !important;
+}
+
+/* Fix input fields to be readable */
+input[type="text"] {
+    background-color: #1a202c !important;
+    color: #ffffff !important;
+    border: 1px solid #4a5568;
 }
 .card h2 {
     text-align: center;

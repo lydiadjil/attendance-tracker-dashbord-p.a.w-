@@ -1,66 +1,78 @@
- const form = document.getElementById('addStudentForm');
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Get the form by the ID we added in exo.php
+    const form = document.getElementById('addStudentForm');
 
-    form.addEventListener('submit', function(event) {
-      // Prevent the form from submitting by default
-      event.preventDefault();
+    // Check if form exists to prevent errors on other pages
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            // 1. Prevent the form from submitting immediately
+            event.preventDefault();
 
-      if (validateForm()) {
-        // If validation is successful, you can proceed with form submission
-        // For this example, we'll just log a success message
-        console.log("Form submitted successfully!");
-        // To actually submit the form, you would use:
-        // form.submit();
-      }
-    });
+            if (validateForm()) {
+                // 2. If validation passes, manually submit the form to PHP
+                console.log("Validation successful. Sending to add_student.php...");
+                
+                // --- THIS IS THE KEY MODIFICATION ---
+                form.submit(); 
+            }
+        });
+    }
 
     function validateForm() {
-      let isValid = true;
+        let isValid = true;
 
-      // Clear previous error messages
-      document.getElementById('studentIdError').textContent = '';
-      document.getElementById('lastNameError').textContent = '';
-      document.getElementById('firstNameError').textContent = '';
-      document.getElementById('emailError').textContent = '';
+        // --- 1. Select Elements (Matching your exo.php IDs) ---
+        const studentIdInput = document.getElementById('student_id');
+        const nameInput = document.getElementById('name');
+        const groupInput = document.getElementById('group');
 
-      const studentId = document.getElementById('studentId').value.trim();
-      const lastName = document.getElementById('lastName').value.trim();
-      const firstName = document.getElementById('firstName').value.trim();
-      const email = document.getElementById('email').value.trim();
+        // Select Error Spans
+        const idError = document.getElementById('idError');
+        const nameError = document.getElementById('nameError');
+        const groupError = document.getElementById('groupError');
 
-      // Regular expressions for validation
-      const numbersOnly = /^[0-9]+$/;
-      const lettersOnly = /^[A-Za-z]+$/;
-      const emailFormat = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        // --- 2. Reset Error Messages ---
+        idError.textContent = '';
+        nameError.textContent = '';
+        groupError.textContent = '';
 
-      // Student ID validation
-      if (studentId === '') {
-        document.getElementById('studentIdError').textContent = 'Student ID is required.';
-        isValid = false;
-      } else if (!studentId.match(numbersOnly)) {
-        document.getElementById('studentIdError').textContent = 'Student ID must contain only numbers.';
-        isValid = false;
-      }
+        // Get values
+        const studentId = studentIdInput.value.trim();
+        const name = nameInput.value.trim();
+        const group = groupInput.value.trim();
 
-      // Last Name validation
-      if (lastName !== '' && !lastName.match(lettersOnly)) {
-        document.getElementById('lastNameError').textContent = 'Last Name must contain only letters.';
-        isValid = false;
-      }
+        // --- 3. Define Rules ---
+        const numbersOnly = /^[0-9]+$/;
+        // Allows letters and spaces (e.g., "John Doe")
+        const lettersOnly = /^[A-Za-z\s]+$/; 
 
-      // First Name validation
-      if (firstName !== '' && !firstName.match(lettersOnly)) {
-        document.getElementById('firstNameError').textContent = 'First Name must contain only letters.';
-        isValid = false;
-      }
+        // --- 4. Validation Logic ---
 
-      // Email validation
-      if (email === '') {
-        document.getElementById('emailError').textContent = 'Email is required.';
-        isValid = false;
-      } else if (!email.match(emailFormat)) {
-        document.getElementById('emailError').textContent = 'Please enter a valid email format (e.g., name@example.com).';
-        isValid = false;
-      }
+        // Validate Student ID
+        if (studentId === '') {
+            idError.textContent = 'Student ID is required.';
+            isValid = false;
+        } else if (!studentId.match(numbersOnly)) {
+            idError.textContent = 'Student ID must contain only numbers.';
+            isValid = false;
+        }
 
-      return isValid;
+        // Validate Full Name
+        if (name === '') {
+            nameError.textContent = 'Full Name is required.';
+            isValid = false;
+        } else if (!name.match(lettersOnly)) {
+            nameError.textContent = 'Name must contain only letters and spaces.';
+            isValid = false;
+        }
+
+        // Validate Group
+        if (group === '') {
+            groupError.textContent = 'Group is required.';
+            isValid = false;
+        }
+
+        return isValid;
     }
+});

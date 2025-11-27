@@ -1,0 +1,6 @@
+[2025-11-27 09:23:55] Connection failed: SQLSTATE[HY000] [1049] Base 'attendance_db' inconnue
+[2025-11-27 09:35:24] Connection failed: SQLSTATE[HY000] [1049] Base 'attendance_db' inconnue
+[2025-11-27 09:44:23] Connection failed: SQLSTATE[HY000] [1049] Base 'attendance_db' inconnue
+[2025-11-27 09:48:04] Connection failed: SQLSTATE[HY000] [1049] Base 'attendance_db' inconnue
+[2025-11-27 19:23:04] Connection failed: SQLSTATE[HY000] [1045] Accès refusé pour l'utilisateur: 'root'@'localhost' (mot de passe: OUI)
+[2025-11-27 19:23:56] Connection failed: SQLSTATE[HY000] [1045] Accès refusé pour l'utilisateur: 'root'@'localhost' (mot de passe: OUI)

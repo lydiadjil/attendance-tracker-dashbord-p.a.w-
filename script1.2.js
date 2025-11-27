@@ -4,80 +4,51 @@ $(document).ready(function() {
     Chart.defaults.color = '#e2e8f0';
 
     // --- SELECTORS ---
-    const addStudentForm = $('#add-student-form');
+    const tableBody = $('#attendance-table tbody');
     const reportButton = $('#show-report-btn');
     const highlightButton = $('#highlight-btn');
     const resetButton = $('#reset-btn');
-    const tableBody = $('#attendance-table tbody');
+
+    // --- REMOVED: The Form Submit Listener ---
+    // We removed the $('#add-student-form').on('submit'...) block.
+    // Now, the HTML <form> tag will send the data to add_student.php automatically.
 
     // --- EVENT LISTENERS ---
 
-    // Listener for the new student form submission
-    addStudentForm.on('submit', function(event) {
-        event.preventDefault(); // Stop the form from submitting the traditional way
-
-        const firstName = $('#firstName').val().trim();
-        const lastName = $('#lastName').val().trim();
-
-        if (firstName === "" || lastName === "") {
-            alert("Please enter both first and last name.");
-            return;
-        }
-
-        // Create the HTML for the new row
-        const newRowHTML = `
-            <tr class="student-row">
-                <td>${lastName}</td>
-                <td>${firstName}</td>
-                <td><input type="checkbox" class="presence"></td>
-                <td><input type="checkbox" class="participation"></td>
-                <td><input type="checkbox" class="presence"></td>
-                <td><input type="checkbox" class="participation"></td>
-                <td><input type="checkbox" class="presence"></td>
-                <td><input type="checkbox" class="participation"></td>
-                <td><input type="checkbox" class="presence"></td>
-                <td><input type="checkbox" class="participation"></td>
-                <td><input type="checkbox" class="presence"></td>
-                <td><input type="checkbox" class="participation"></td>
-                <td><input type="checkbox" class="presence"></td>
-                <td><input type="checkbox" class="participation"></td>
-                <td class="absences-count"></td>
-                <td class="participation-count"></td>
-                <td class="message-cell"></td>
-            </tr>`;
-
-        // Append the new row and get the new jQuery object
-        const newRow = $(newRowHTML).appendTo(tableBody);
-
-        // Calculate its initial stats and color
-        updateStudentStats(newRow[0]);
-
-        // Clear the form fields
-        $('#firstName').val('');
-        $('#lastName').val('');
+    // 1. Listen for changes on ANY checkbox (even new ones from PHP)
+    tableBody.on('change', 'input[type="checkbox"]', function() {
+        // Find the specific row that changed and update only that student
+        const row = $(this).closest('tr');
+        updateStudentStats(row);
     });
 
-    // Use event delegation for all interactive elements inside the table body
-    // This ensures that new rows are interactive without re-binding events
-    tableBody.on('change', 'input[type="checkbox"]', updateEverything);
-
+    // 2. Hover effects
     tableBody.on('mouseenter', '.student-row', function() {
         $(this).addClass('row-hover-highlight');
     }).on('mouseleave', '.student-row', function() {
         $(this).removeClass('row-hover-highlight');
     });
 
-    tableBody.on('click', '.student-row', function() {
+    // 3. Click row to see details
+    tableBody.on('click', '.student-row', function(e) {
+        // Prevent alert when clicking checkboxes
+        if ($(e.target).is('input')) return;
+
         const lastName = $(this).find('td:nth-child(1)').text();
         const firstName = $(this).find('td:nth-child(2)').text();
         const absences = $(this).find('.absences-count').text();
-        alert(`Student: ${firstName} ${lastName}\n${absences}`);
+        // alert(`Student: ${firstName} ${lastName}\n${absences}`); 
+        // Commented out alert because it can be annoying, uncomment if needed
     });
 
-    // Button Listeners
+    // 4. Button Listeners
     reportButton.on('click', generateSummaryReport);
+    
     highlightButton.on('click', function() {
+        // Clear old highlights
         $('.student-row').removeClass('highlight-green highlight-yellow highlight-red excellent-student-highlight').css('background-image', '');
+        
+        // Add specific highlight for excellent students (< 3 absences)
         $('.student-row').each(function() {
             const absenceCount = parseInt($(this).find('.absences-count').text()) || 0;
             if (absenceCount < 3) {
@@ -85,9 +56,14 @@ $(document).ready(function() {
             }
         });
     });
-    resetButton.on('click', updateEverything);
+
+    resetButton.on('click', function() {
+        // Re-run the main calculation to reset colors based on attendance
+        updateEverything();
+    });
 
     // --- INITIALIZATION ---
+    // Run this immediately to calculate stats for students loaded from PHP
     updateEverything();
 });
 
@@ -102,14 +78,20 @@ function updateEverything() {
 
 function updateStudentStats(row) {
     const $row = $(row);
+    
+    // Count unchecked "presence" boxes
     let absenceCount = $row.find('.presence:not(:checked)').length;
+    // Count checked "participation" boxes
     let participationCount = $row.find('.participation:checked').length;
 
+    // Update text
     $row.find('.absences-count').text(`${absenceCount} Abs`);
     $row.find('.participation-count').text(`${participationCount} Par`);
 
+    // Reset Classes
     $row.removeClass('highlight-green highlight-yellow highlight-red excellent-student-highlight').css('background-image', '');
 
+    // Apply Logic
     if (absenceCount >= 5) {
         $row.addClass('highlight-red');
     } else if (absenceCount >= 3) {
@@ -118,6 +100,7 @@ function updateStudentStats(row) {
         $row.addClass('highlight-green');
     }
 
+    // Update Message
     const messageCell = $row.find('.message-cell');
     if (absenceCount >= 5) {
         messageCell.text('Excluded – too many absences');
@@ -134,8 +117,12 @@ function generateSummaryReport() {
     let presentStudents = 0, participatedStudents = 0;
 
     allStudentRows.each(function() {
-        if (parseInt($(this).find('.absences-count').text()) === 0) presentStudents++;
-        if (parseInt($(this).find('.participation-count').text()) > 0) participatedStudents++;
+        // Parse the text "0 Abs" -> integer 0
+        const absText = $(this).find('.absences-count').text();
+        const parText = $(this).find('.participation-count').text();
+        
+        if (parseInt(absText) === 0) presentStudents++;
+        if (parseInt(parText) > 0) participatedStudents++;
     });
 
     const absentStudents = totalStudents - presentStudents;
@@ -146,29 +133,35 @@ function generateSummaryReport() {
         <p><strong>Students who Participated:</strong> ${participatedStudents}</p>
     `);
 
-    const ctx = document.getElementById('summary-chart').getContext('2d');
-    if (window.mySummaryChart) window.mySummaryChart.destroy();
+    // Chart Logic
+    const canvas = document.getElementById('summary-chart');
+    // Ensure canvas exists before drawing
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (window.mySummaryChart) window.mySummaryChart.destroy();
 
-    window.mySummaryChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: ['Perfect Attendance', 'Have Absences'],
-            datasets: [{
-                data: [presentStudents, absentStudents],
-                backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(255, 99, 132, 0.7)'],
-                borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' },
-                title: { display: true, text: 'Student Attendance Breakdown' }
+        window.mySummaryChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Perfect Attendance', 'Have Absences'],
+                datasets: [{
+                    data: [presentStudents, absentStudents],
+                    backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(255, 99, 132, 0.7)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Student Attendance Breakdown' }
+                }
             }
-        }
-    });
-
-    $('#summary-report-section').removeClass('hidden');
+        });
+        
+        // Show the section
+        $('#summary-report-section').removeClass('hidden');
+    }
 }
