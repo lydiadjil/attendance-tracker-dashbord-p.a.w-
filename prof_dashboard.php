@@ -45,34 +45,48 @@ $sessions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Professor Dashboard</title>
     <link rel="stylesheet" href="exo2.css">
 </head>
 <body>
 <div class="container">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
+    
+    <!-- HEADER -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <h1>Professor Dashboard</h1>
         <div>
-            <span>Dr. <?php echo htmlspecialchars($_SESSION['name']); ?></span>
+            <span style="margin-right: 15px;">Dr. <?php echo htmlspecialchars($_SESSION['name']); ?></span>
             <a href="logout.php" class="btn btn-secondary">Logout</a>
         </div>
     </div>
 
-    <!-- CREATE SESSION CARD -->
+   <!-- MANAGE COURSES CARD (Create Session OR View Matrix) -->
     <section class="card">
-        <h2>Start New Class Session</h2>
+        <h2>Manage Courses</h2>
         <?php echo $message; ?>
-        <form method="POST">
+        
+        <form method="POST" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
             <input type="hidden" name="create_session" value="1">
-            <div style="display:flex; gap:10px;">
-                <select name="course_id" required style="padding:10px; flex:1; background:#1a202c; color:white; border:1px solid #4a5568;">
-                    <option value="">Select Course...</option>
+            
+            <div style="flex:1; min-width: 200px;">
+                <label style="font-weight:bold; margin-bottom:5px; display:block;">Select Course:</label>
+                <!-- ID="courseSelect" is crucial for the JavaScript below -->
+                <select id="courseSelect" name="course_id" required style="width:100%; padding:12px; background:#1a202c; color:white; border:1px solid #4a5568; border-radius:5px;">
+                    <option value="">Choose a course...</option>
                     <?php foreach ($myCourses as $c): ?>
                         <option value="<?php echo $c['id']; ?>"><?php echo htmlspecialchars($c['name']); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <button type="submit" class="btn">Create Session (Today)</button>
             </div>
+
+            <!-- BUTTON 1: Create a new session for this course -->
+            <button type="submit" class="btn" style="height:42px;">Create Session (Today)</button>
+
+            <!-- BUTTON 2: Go to the S1-S6 Matrix for this course -->
+            <button type="button" class="btn" style="background-color:#f1c40f; color:black; height:42px; font-weight:bold;" onclick="goToMatrix()">
+                View Tracking Matrix
+            </button>
         </form>
     </section>
 
@@ -111,5 +125,21 @@ $sessions = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </table>
     </section>
 </div>
+
+<!-- JavaScript to make the yellow button work dynamically -->
+<script>
+function goToMatrix() {
+    // 1. Get the ID of the selected course
+    var courseId = document.getElementById('courseSelect').value;
+    
+    // 2. If a course is selected, go to the tracking page
+    if (courseId) {
+        window.location.href = 'course_tracking.php?course_id=' + courseId;
+    } else {
+        alert("Please select a course first!");
+    }
+}
+</script>
+
 </body>
 </html>
