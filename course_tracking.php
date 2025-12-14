@@ -169,7 +169,9 @@ while ($row = $attQuery->fetch(PDO::FETCH_ASSOC)) {
 $(document).ready(function() {
     
     // 1. AJAX SAVING
-    // When any checkbox is clicked, save to DB immediately
+    // When any checkbox is clicked, save to DB immediately 
+    //JAX (Saving data without reloading)
+   // When check a box, don't want the whole page to refresh.
     $('input[type="checkbox"]').change(function() {
         const checkbox = $(this);
         const type = checkbox.hasClass('presence') ? 'presence' : 'participation';

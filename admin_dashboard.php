@@ -85,6 +85,8 @@ if (isset($_GET['delete_id'])) {
     exit;
 }
 
+
+
 // 4. FETCH DATA FOR UI
 $countStudents = $pdo->query("SELECT COUNT(*) FROM users WHERE role='student'")->fetchColumn();
 $countProfs = $pdo->query("SELECT COUNT(*) FROM users WHERE role='professor'")->fetchColumn();
@@ -251,25 +253,28 @@ $courses = $pdo->query("SELECT c.name, u.full_name as prof_name FROM courses c L
             </table>
         </div>
     </section>
+
+    
 </div>
 
 <!-- SCRIPTS -->
 <script>
-   function toggleMatricule() {
-    const role = document.getElementById('roleSelect').value;
-    const matInput = document.getElementById('matriculeInput');
-    const grpInput = document.getElementById('groupInput');
-    
-    if (role === 'student') {
-        matInput.style.display = 'block';
-        matInput.required = true;
-        grpInput.style.display = 'block'; // Show Group
-    } else {
-        matInput.style.display = 'none';
-        matInput.required = false;
-        grpInput.style.display = 'none'; // Hide Group
+    function toggleMatricule() {
+        const role = document.getElementById('roleSelect').value;
+        const matInput = document.getElementById('matriculeInput');
+        // Check if groupInput exists before trying to style it (to avoid errors)
+        const grpInput = document.getElementById('groupInput');
+        
+        if (role === 'student') {
+            matInput.style.display = 'block';
+            matInput.required = true;
+            if(grpInput) grpInput.style.display = 'block'; 
+        } else {
+            matInput.style.display = 'none';
+            matInput.required = false;
+            if(grpInput) grpInput.style.display = 'none'; 
+        }
     }
-}
 
     const ctx = document.getElementById('userChart').getContext('2d');
     new Chart(ctx, {
@@ -281,24 +286,51 @@ $courses = $pdo->query("SELECT c.name, u.full_name as prof_name FROM courses c L
         options: { responsive: true, maintainAspectRatio: false }
     });
 
-    function exportTableToExcel(tableID, filename = 'users_list.xls'){
-        var downloadLink;
-        var dataType = 'application/vnd.ms-excel';
+    // --- FIXED EXPORT FUNCTION ---
+    function exportTableToExcel(tableID, filename = 'users_list'){
         var tableSelect = document.getElementById(tableID);
-        var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
         
-        filename = filename?filename+'.xls':'excel_data.xls';
-        downloadLink = document.createElement("a");
+        // 1. Get HTML without corrupting spaces
+        var tableHTML = tableSelect.outerHTML;
+
+        // 2. Create the Excel Template
+        var fullTemplate = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="UTF-8">
+                <!--[if gte mso 9]>
+                <xml>
+                <x:ExcelWorkbook>
+                    <x:ExcelWorksheets>
+                        <x:ExcelWorksheet>
+                            <x:Name>List</x:Name>
+                            <x:WorksheetOptions>
+                                <x:DisplayGridlines/>
+                            </x:WorksheetOptions>
+                        </x:ExcelWorksheet>
+                    </x:ExcelWorksheets>
+                </x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
+            </head>
+            <body>
+                ${tableHTML}
+            </body>
+            </html>`;
+
+        // 3. Create a Blob (File Object)
+        var blob = new Blob([fullTemplate], { type: 'application/vnd.ms-excel' });
+
+        // 4. Download it
+        var downloadLink = document.createElement("a");
+        var url = URL.createObjectURL(blob);
+        
+        downloadLink.href = url;
+        downloadLink.download = filename + ".xls";
+        
         document.body.appendChild(downloadLink);
-        
-        if(navigator.msSaveOrOpenBlob){
-            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
-            navigator.msSaveOrOpenBlob( blob, filename);
-        }else{
-            downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
-            downloadLink.download = filename;
-            downloadLink.click();
-        }
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     }
 </script>
 </body>

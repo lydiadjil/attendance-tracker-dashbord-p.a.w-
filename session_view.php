@@ -103,10 +103,10 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </section>
 </div>
 
-<!-- AJAX SCRIPT TO SAVE INSTANTLY -->
+<!-- SCRIPT TO SAVE INSTANTLY -->
 <script>
 $(document).ready(function() {
-    $('.att-radio').change(function() {
+    $('.att-radio').change(function() { //to detect when a radio button changes
         const studentId = $(this).data('student');
         const status = $(this).val();
         const sessionId = <?php echo $session_id; ?>;
